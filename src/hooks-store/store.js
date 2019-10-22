@@ -2,10 +2,20 @@ import { useState, useEffect } from 'react';
 
 let globalState = {};
 let listeners = [];
-let action = {};
+let actions = {};
 
-const useStore = () => {
+export const useStore = () => {
 	const [ state, setState ] = useState(globalState);
+
+	const dispatch = actionIdentifier => {
+		const newState = actions[actionIdentifier](globalState);
+		globalState = { ...globalState, ...newState };
+
+		for (const listener of listeners) {
+			listener(globalState);
+		}
+	};
+
 	useEffect(
 		() => {
 			listeners.push(setState);
@@ -16,4 +26,13 @@ const useStore = () => {
 		},
 		[ setState ]
 	);
+
+	return [ globalState, dispatch ];
+};
+
+export const initStore = (userActions, initalState) => {
+	if (initalState) {
+		globalState = { ...globalState, ...initalState };
+	}
+	actions = { ...actions, ...userActions };
 };
